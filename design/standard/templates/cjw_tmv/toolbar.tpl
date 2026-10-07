@@ -24,10 +24,10 @@
                     <label for="start">{'Category'|i18n( 'extension/cjw_tmv' )}</label>
 
                     <div class="form-group">
-                        {foreach $tb_categories as $tb_id => $tb_name}
+                        {foreach $tb_categories as $tb_category_id => $tb_category_name}
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="checkbox" id="checkbox_{$tb_id|wash}" name="Categories[]" value="{$tb_id|wash}"{if $tb_filter.categories|contains( $tb_id|wash )} checked="checked"{/if} />
-                                <label class="form-check-label" for="checkbox_{$tb_id|wash}">{$tb_name|wash}</label>
+                                <input class="form-check-input" type="checkbox" id="checkbox_{$tb_category_id|wash}" name="Categories[]" value="{$tb_category_id|wash}"{if $tb_filter.categories|contains( $tb_category_id|wash )} checked="checked"{/if} />
+                                <label class="form-check-label" for="checkbox_{$tb_category_id|wash}">{$tb_category_name|wash}</label>
                             </div>
                         {/foreach}
                     </div>
