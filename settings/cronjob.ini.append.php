@@ -1,6 +1,6 @@
 <?php /* #?ini charset="utf-8"?
 
-# The TMV event feed: php runcronjobs.php -s <siteaccess> cjw_tmv (hourly is a good rhythm)
+# The TMV event import: php runcronjobs.php -s <German siteaccess> cjw_tmv (hourly)
 [CronjobSettings]
 ExtensionDirectories[]=cjw_tmv
 

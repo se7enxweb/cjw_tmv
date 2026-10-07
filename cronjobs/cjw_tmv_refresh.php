@@ -1,12 +1,13 @@
 <?php
 /**
- * Cronjob part cjw_tmv: refreshes the TMV event feed of every tmv_container (the file cache the pages read).
+ * Cronjob part cjw_tmv: imports and updates the TMV events of every tmv_container as content objects
+ * (cjwTmvImporter), and removes the past ones.
  *
- *   php runcronjobs.php -s <siteaccess> cjw_tmv
+ *   php runcronjobs.php -s <German siteaccess> cjw_tmv
  *
- * Calls the TMV API only; writes no content. At most "limit_import_per_cronjob" (container field, default 100)
- * events are downloaded per container and run, missing ones first, so a first run on a large feed fills the cache
- * over several runs. When the API cannot be reached, the previous lists stay in place.
+ * Run it as the web server's user (files of the event images) with the German siteaccess (the TMV source
+ * language). Environment: CJW_TMV_LIMIT=<n> caps the events created or updated per container in this run (the
+ * container's limit_import_per_cronjob otherwise), CJW_TMV_DRY_RUN=1 asks the TMV and writes nothing.
  * Prints counts only, never the account or anyone's contact data.
  *
  * @copyright Copyright (C) 2007 - 2026 CJW Network, JAC Systeme GmbH and 7x. All rights reserved.
@@ -20,35 +21,37 @@ if ( !isset( $cli ) || !$cli instanceof eZCLI )
 $client = new cjwTmvClient();
 if ( !$client->isConfigured() )
 {
-    $cli->warning( 'cjw_tmv: no TMV account in cjw_tmv.ini [TMV] User/Password (settings/override), nothing refreshed' );
+    $cli->warning( 'cjw_tmv: no TMV account in cjw_tmv.ini [TMV] User/Password (settings/override), nothing imported' );
     return;
 }
 
-$lockDir = cjwTmvFeed::cacheDir();
+$lockDir = eZSys::cacheDirectory() . '/cjw_tmv';
 if ( !is_dir( $lockDir ) )
     @mkdir( $lockDir, 0775, true );
-$lock = @fopen( $lockDir . '/refresh.lock', 'c' );
+$lock = @fopen( $lockDir . '/import.lock', 'c' );
 if ( !$lock || !flock( $lock, LOCK_EX | LOCK_NB ) )
 {
-    $cli->warning( 'cjw_tmv: another refresh is running, skipped' );
+    $cli->warning( 'cjw_tmv: another import is running, skipped' );
     return;
 }
 
-$force = in_array( '--tmv-force', isset( $_SERVER['argv'] ) ? (array)$_SERVER['argv'] : array() );
-$cli->output( 'cjw_tmv: ' . cjwTmvFeed::refreshCategories( $client, $force ) );
+$creatorID = (int)eZINI::instance( 'cjw_tmv.ini' )->variable( 'Import', 'CreatorUserID' );
+$creator = eZUser::fetch( $creatorID > 0 ? $creatorID : 14 );
+if ( $creator )
+    eZUser::setCurrentlyLoggedInUser( $creator, $creator->attribute( 'contentobject_id' ) );
 
-$usedIds = array();
+$limit = (int)getenv( 'CJW_TMV_LIMIT' );
+$dryRun = getenv( 'CJW_TMV_DRY_RUN' ) === '1';
 foreach ( cjwTmvFeed::fetchContainers() as $node )
 {
-    $feed = new cjwTmvFeed( $node );
     $started = microtime( true );
-    $feed->refresh( $client, $force );
-    foreach ( $feed->log as $line )
+    $importer = new cjwTmvImporter( $node, $client, $dryRun );
+    $importer->importCategories();
+    $importer->run( $limit );
+    foreach ( $importer->log as $line )
         $cli->output( 'cjw_tmv: container ' . $node->attribute( 'node_id' ) . ': ' . $line );
-    $cli->output( sprintf( 'cjw_tmv: container %d done in %.1fs', $node->attribute( 'node_id' ), microtime( true ) - $started ) );
-    $usedIds = array_merge( $usedIds, $feed->listedIds() );
+    $cli->output( sprintf( 'cjw_tmv: container %d done in %.1fs%s', $node->attribute( 'node_id' ), microtime( true ) - $started, $dryRun ? ' (dry run)' : '' ) );
 }
-$cli->output( 'cjw_tmv: unused cache files removed: ' . cjwTmvFeed::removeUnused( $usedIds ) );
 
 flock( $lock, LOCK_UN );
 fclose( $lock );

@@ -12,13 +12,13 @@ class cjwTmvFunctionCollection
     /**
      * fetch( 'cjw_tmv', 'events', hash( 'container', $node, 'filter', $filter, 'offset', 0, 'limit', 20,
      *                                   'exclude_categories', '12,13' ) )
-     * @return array result: list, total, built, limit
+     * @return array result: list (node, next_start, next_end, date_count, short_text), total, limit
      */
     public static function events( $container, $filter = false, $offset = 0, $limit = 0, $excludeCategories = '' )
     {
         $feed = cjwTmvFeed::forContainer( $container );
         if ( !$feed )
-            return array( 'result' => array( 'list' => array(), 'total' => 0, 'built' => 0, 'limit' => (int)$limit ) );
+            return array( 'result' => array( 'list' => array(), 'total' => 0, 'limit' => (int)$limit ) );
         if ( !is_array( $filter ) )
             $filter = cjwTmvFeed::filterParams();
         $exclude = is_array( $excludeCategories ) ? $excludeCategories : explode( ',', (string)$excludeCategories );
@@ -26,18 +26,8 @@ class cjwTmvFunctionCollection
     }
 
     /**
-     * fetch( 'cjw_tmv', 'event', hash( 'container', $node, 'id', $id ) )
-     * @return array result: the event, or false
-     */
-    public static function event( $container, $id )
-    {
-        $feed = cjwTmvFeed::forContainer( $container );
-        return array( 'result' => $feed ? $feed->event( (int)$id ) : false );
-    }
-
-    /**
      * fetch( 'cjw_tmv', 'categories', hash( 'container', $node ) )
-     * @return array result: id => name
+     * @return array result: TMV category id => title
      */
     public static function categories( $container )
     {

@@ -1,36 +1,46 @@
 # CJW TMV event feed (cjw_tmv)
 
 The events of the TMV event database (Tourismusverband Mecklenburg-Vorpommern, infomax imxplatform JSON API)
-for Exponential 6. A port of the legacy extension `cjw_tmv_veranstdb` and of the Nexus v2 `TmvBundle`, with one
-change of approach: the events are **not** imported as content objects. A cronjob part fetches them into a file
-cache, and the pages read only that cache.
+for Exponential 6, imported as content objects. A port of the legacy extension `cjw_tmv_veranstdb` (the import)
+and of the Nexus v2 `TmvBundle` (classes, views, the Layouts block `tmv_events`).
 
 Status: 0.1.0, first port. Not yet released.
 
 ## What it does
 
-- `cronjobs/cjw_tmv_refresh.php` (cronjob part `cjw_tmv`): for every `tmv_container` node, the TMV event ids of
-  its locations (field `locations`, lines `id|name`) and client, then the events (at most
-  `limit_import_per_cronjob` per run, missing ones first), their images (scaled, stored below
-  `var/<site>/cache/public/cjw_tmv/images`) and the TMV categories. A failed API call keeps the previous files.
-- `cjw_tmv/container.tpl`: hook for the full view of a `tmv_container` (filter, list, pager; and the event page
-  at `<container>/(event)/<id>`). `[ContainerView] ShowEventList=disabled` keeps the title-only view of v2.
-- Layouts block `tmv_events` (view types `list`, `toolbar`, `recent`) for the siteaccesses that load
-  `settings/siteaccess/cjw_starter`.
-- Fetch functions: `fetch( 'cjw_tmv', 'events' | 'event' | 'categories' | 'places' | 'filter_params', ... )`.
+- Cronjob part `cjw_tmv` (`cronjobs/cjw_tmv_refresh.php`, class `cjwTmvImporter`), for every `tmv_container`:
+  - the TMV event ids of its locations (field `locations`, lines `id|name`), its client and extra ids;
+  - creates the events not there yet, updates those the TMV reports modified since the last run, at most
+    `limit_import_per_cronjob` per run and `limit_events` in all;
+  - objects: `tmv_event` (remote id `cjw-tmv-<event id>`), its coming dates as `tmv_date`, up to four images as
+    `tmv_image` (downloaded, scaled to 1200 px), the categories as `tmv_categorie` below
+    `tmv_container_categories`; German, always available, with an English translation when the TMV has one;
+  - removes, as the legacy cronjobs did, dates that have ended, events without a coming date and events the TMV no
+    longer lists; only below the container and only objects whose remote id starts with `cjw-tmv-`.
+- Views (starter siteaccesses, `settings/siteaccess/cjw_starter/override.ini.append.php`): full and line view of
+  `tmv_event` in v2's markup; `tmv_date` and `tmv_image` redirect to their event.
+- `design:cjw_tmv/container.tpl`: the filter, the events at their next date and the pager, for the full view of a
+  `tmv_container` (`[ContainerView] ShowEventList`).
+- Layouts block `tmv_events` (view types `list`, `toolbar`, `recent`).
+- Fetch functions: `fetch( 'cjw_tmv', 'events' | 'categories' | 'places' | 'filter_params', ... )`.
+
+The templates use the design `starter` of `cjw_themes_jumper` (`content/item_parts/image.tpl`, `parts/pager.tpl`,
+the `cjw_i*` image aliases).
 
 ## Layout
 
 ```
-classes/                    cjwTmvClient (API), cjwTmvFeed (cache, refresh, filter), cjwTmvHtml (text cleaning),
-                            cjwTmvFunctionCollection (fetch functions), cjwTmvEventsBlockHandler (Layouts block)
+classes/                    cjwTmvClient (API), cjwTmvImporter (objects), cjwTmvFeed (reading, filter),
+                            cjwTmvHtml (text cleaning), cjwTmvFunctionCollection, cjwTmvEventsBlockHandler
 cronjobs/cjw_tmv_refresh.php
 modules/cjw_tmv/            fetch functions only, no views
-design/standard/templates/  cjw_tmv/*.tpl, explayouts/block/tmv_events.tpl
+design/standard/            templates/cjw_tmv/*.tpl, templates/explayouts/block/tmv_events.tpl, override/templates
 settings/                   cjw_tmv.ini (no account), cronjob.ini, design.ini, module.ini
-settings/siteaccess/cjw_starter/   the Layouts block and the translations, for the starter siteaccesses
+settings/siteaccess/cjw_starter/   overrides, the Layouts block, the translations
 translations/ger-DE/
 ```
+
+The classes come with the `cjw_multisite_democontent` package (Nexus v2 TmvBundle package `tmv_classes-1.0-1`).
 
 See [INSTALL.md](INSTALL.md).
 

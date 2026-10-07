@@ -1,5 +1,5 @@
 {* The events of a tmv_container: filter, list, pager (v2: Cjw\TmvBundle blocks/app/tmv_events/{list,toolbar,
-   recent}.html.twig). Reads the feed's file cache only.
+   recent}.html.twig), from the imported event objects.
    Input: ev_container (the tmv_container node), ev_mode ('list' with the filter, 'toolbar' the filter only,
           'recent' without it), ev_limit (0 = the container's page limit), ev_view_type ('list' or 'grid'),
           ev_columns (grid columns), ev_exclude (category ids, comma separated) *}
@@ -29,7 +29,7 @@
     <div class="{if first_set( $ev_view_type, 'list' )|eq( 'grid' )}grid-row{else}list-row{/if}">
         {foreach $ev_result.list as $ev_event}
             <div class="{if first_set( $ev_view_type, 'list' )|eq( 'grid' )}grid-item cols-{first_set( $ev_columns, 1 )|wash}{else}list-item{/if}">
-                {include uri='design:cjw_tmv/line.tpl' ln_event=$ev_event ln_url=concat( $ev_url, '/(event)/', $ev_event.id )|ezurl ln_columns='line'}
+                {include uri='design:cjw_tmv/line.tpl' ln_item=$ev_event ln_columns='line'}
             </div>
         {/foreach}
     </div>
