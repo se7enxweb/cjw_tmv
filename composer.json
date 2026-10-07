@@ -1,0 +1,24 @@
+{
+    "name": "se7enxweb/cjw_tmv",
+    "description": "CJW TMV event feed: the events of the Tourismusverband Mecklenburg-Vorpommern event database for Exponential, cached and drawn without content objects",
+    "type": "ezpublish-legacy-extension",
+    "keywords": [ "Exponential", "Exponential 6", "legacy extension", "events", "TMV", "feed" ],
+    "homepage": "https://github.com/se7enxweb/cjw_tmv",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        { "name": "7x", "homepage": "https://se7enx.com", "email": "info@se7enx.com", "role": "Author" }
+    ],
+    "support": {
+        "issues": "https://github.com/se7enxweb/cjw_tmv/issues",
+        "source": "https://github.com/se7enxweb/cjw_tmv"
+    },
+    "require": {
+        "php": ">=8.0",
+        "ext-curl": "*",
+        "ext-json": "*",
+        "se7enxweb/ezpublish-legacy-installer": "*"
+    },
+    "extra": {
+        "ezpublish-legacy-extension-name": "cjw_tmv"
+    }
+}

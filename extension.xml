@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<software>
+    <metadata>
+        <name>CJW TMV event feed</name>
+        <version>0.1.0</version>
+        <copyright>Copyright (C) 2007 - 2026 CJW Network, JAC Systeme GmbH and 7x</copyright>
+        <license>GNU General Public License v2.0 (or any later version)</license>
+        <info_url>https://github.com/se7enxweb/cjw_tmv</info_url>
+    </metadata>
+</software>
