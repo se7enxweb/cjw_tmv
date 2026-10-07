@@ -87,7 +87,7 @@ class cjwTmvClient
         $body = curl_exec( $ch );
         $status = (int)curl_getinfo( $ch, CURLINFO_HTTP_CODE );
         $error = curl_error( $ch );
-        curl_close( $ch );
+        if ( PHP_VERSION_ID < 80000 ) curl_close( $ch ); // no effect since PHP 8.0, deprecated in 8.5
         if ( $body === false || $status !== 200 )
         {
             $this->lastError = $method . ': HTTP ' . $status . ( $error !== '' ? ' ' . $error : '' );
@@ -124,7 +124,7 @@ class cjwTmvClient
             CURLOPT_USERAGENT => 'Exponential cjw_tmv' ) );
         $body = curl_exec( $ch );
         $status = (int)curl_getinfo( $ch, CURLINFO_HTTP_CODE );
-        curl_close( $ch );
+        if ( PHP_VERSION_ID < 80000 ) curl_close( $ch ); // no effect since PHP 8.0, deprecated in 8.5
         return ( $body !== false && $status === 200 && $body !== '' ) ? $body : false;
     }
 }

@@ -758,10 +758,10 @@ class cjwTmvImporter
             $scaled = imagecreatetruecolor( $width, $height );
             if ( !$scaled || !imagecopyresampled( $scaled, $image, 0, 0, 0, 0, $width, $height, $w, $h ) )
             {
-                imagedestroy( $image );
+                if ( PHP_VERSION_ID < 80000 ) imagedestroy( $image ); // no effect since PHP 8.0, deprecated in 8.5
                 return false;
             }
-            imagedestroy( $image );
+            if ( PHP_VERSION_ID < 80000 ) imagedestroy( $image ); // no effect since PHP 8.0, deprecated in 8.5
             $image = $scaled;
         }
         elseif ( !imageistruecolor( $image ) )
@@ -770,7 +770,7 @@ class cjwTmvImporter
         }
         ob_start();
         imagejpeg( $image, null, 85 );
-        imagedestroy( $image );
+        if ( PHP_VERSION_ID < 80000 ) imagedestroy( $image ); // no effect since PHP 8.0, deprecated in 8.5
         return ob_get_clean();
     }
 }
