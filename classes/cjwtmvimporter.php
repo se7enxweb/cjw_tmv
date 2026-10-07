@@ -44,6 +44,9 @@ class cjwTmvImporter
     /** @var int */
     protected $creatorID;
 
+    /** @var int section of the container, given to every imported object */
+    protected $sectionID = 0;
+
     /** @var bool */
     protected $dryRun = false;
 
@@ -58,6 +61,8 @@ class cjwTmvImporter
         $this->ini = eZINI::instance( 'cjw_tmv.ini' );
         $this->dryRun = (bool)$dryRun;
         $this->creatorID = (int)$this->setting( 'Import', 'CreatorUserID', 14 );
+        // the objects get the container's section (eZContentFunctions does not inherit it)
+        $this->sectionID = (int)$container->attribute( 'object' )->attribute( 'section_id' );
     }
 
     protected function setting( $group, $name, $default )
@@ -72,9 +77,10 @@ class cjwTmvImporter
 
     /**
      * @param int $limit events to create or update in this run (0 = the container's limit_import_per_cronjob)
+     * @param bool $updateAll update every existing event (within the limit), not only those the TMV reports modified
      * @return bool false when the TMV could not be asked (nothing changed)
      */
-    public function run( $limit = 0 )
+    public function run( $limit = 0, $updateAll = false )
     {
         $this->log = array();
         $budget = (int)$limit > 0 ? (int)$limit : $this->feed->limitPerRun();
@@ -99,9 +105,9 @@ class cjwTmvImporter
         // 2. update events modified at TMV since the last run (legacy: cronjob update)
         $updated = 0;
         $lastRun = $this->lastRun();
-        if ( $lastRun > 0 && $budget > 0 )
+        if ( ( $lastRun > 0 || $updateAll ) && $budget > 0 )
         {
-            $modified = $this->fetchEventIds( array( 'eModifiedFrom' => date( 'Y-m-d', $lastRun ) ) );
+            $modified = $updateAll ? array_keys( $existing ) : $this->fetchEventIds( array( 'eModifiedFrom' => date( 'Y-m-d', $lastRun ) ) );
             foreach ( $modified === false ? array() : $modified as $id )
             {
                 if ( $budget <= 0 )
@@ -339,13 +345,15 @@ class cjwTmvImporter
         else
         {
             $object = eZContentFunctions::createAndPublishObject( array(
-                'creator_id' => $this->creatorID, 'class_identifier' => 'tmv_event',
+                'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_event',
                 'parent_node_id' => $this->container->attribute( 'node_id' ), 'remote_id' => self::PREFIX . $event['id'],
                 'language' => 'ger-DE', 'attributes' => $de ) );
         }
         if ( !$object instanceof eZContentObject )
             return 'failed';
-        $object->setAlwaysAvailableLanguageID( $object->attribute( 'initial_language_id' ) );
+        $object = self::makeAlwaysAvailable( $object );
+        if ( !$object )
+            return 'failed';
 
         // English translation when the TMV has an English title (legacy: eng-GB version)
         if ( isset( $event['title']['en'] ) && $this->setting( 'Import', 'TranslationLanguage', '' ) !== '' )
@@ -393,11 +401,11 @@ class cjwTmvImporter
                 continue;
             }
             $object = eZContentFunctions::createAndPublishObject( array(
-                'creator_id' => $this->creatorID, 'class_identifier' => 'tmv_date',
+                'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_date',
                 'parent_node_id' => $eventNode->attribute( 'node_id' ), 'remote_id' => $remoteId,
                 'language' => 'ger-DE', 'attributes' => $attributes ) );
             if ( $object instanceof eZContentObject )
-                $object->setAlwaysAvailableLanguageID( $object->attribute( 'initial_language_id' ) );
+                $object = self::makeAlwaysAvailable( $object );
         }
         foreach ( $have as $remoteId => $node )
             if ( !isset( $want[$remoteId] ) )
@@ -441,14 +449,14 @@ class cjwTmvImporter
             $copyright = isset( $medium['pooledMedium']['copyright']['de'] ) && is_string( $medium['pooledMedium']['copyright']['de'] )
                 ? trim( $medium['pooledMedium']['copyright']['de'] ) : '';
             $object = eZContentFunctions::createAndPublishObject( array(
-                'creator_id' => $this->creatorID, 'class_identifier' => 'tmv_image',
+                'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_image',
                 'parent_node_id' => $eventNode->attribute( 'node_id' ), 'remote_id' => $remoteId, 'language' => 'ger-DE',
                 'attributes' => array( 'title' => $title, 'image' => $file . '|' . $title,
                                        'caption' => self::xml( $copyright !== '' ? '&copy; ' . htmlspecialchars( $copyright ) : '' ) ) ) );
             @unlink( $file );
             if ( $object instanceof eZContentObject )
             {
-                $object->setAlwaysAvailableLanguageID( $object->attribute( 'initial_language_id' ) );
+                $object = self::makeAlwaysAvailable( $object );
                 $want[$remoteId] = true;
             }
         }
@@ -509,12 +517,12 @@ class cjwTmvImporter
                 continue;
             }
             $object = eZContentFunctions::createAndPublishObject( array(
-                'creator_id' => $this->creatorID, 'class_identifier' => 'tmv_categorie',
+                'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_categorie',
                 'parent_node_id' => $parent->attribute( 'node_id' ), 'remote_id' => $remoteId, 'language' => 'ger-DE',
                 'attributes' => array( 'title' => $name, 'id' => (string)(int)$item['id'] ) ) );
             if ( $object instanceof eZContentObject )
             {
-                $object->setAlwaysAvailableLanguageID( $object->attribute( 'initial_language_id' ) );
+                $object = self::makeAlwaysAvailable( $object );
                 $created++;
             }
         }
@@ -696,6 +704,24 @@ class cjwTmvImporter
     }
 
     /**
+     * Marks an object always available. The object eZContentFunctions returns is the instance from before the
+     * publish (status draft); storing that one would set the published object back to draft, so it is fetched
+     * again first.
+     *
+     * @return eZContentObject|false the fresh object
+     */
+    protected static function makeAlwaysAvailable( eZContentObject $object )
+    {
+        $id = (int)$object->attribute( 'id' );
+        eZContentObject::clearCache( array( $id ) );
+        $fresh = eZContentObject::fetch( $id );
+        if ( !$fresh instanceof eZContentObject )
+            return false;
+        $fresh->setAlwaysAvailableLanguageID( $fresh->attribute( 'initial_language_id' ) );
+        return $fresh;
+    }
+
+    /**
      * @param string $html clean HTML (cjwTmvHtml) or ''
      * @return string the ezxmltext input (legacy: TmvHelper::stringToXML)
      */
@@ -728,9 +754,19 @@ class cjwTmvImporter
         $h = imagesy( $image );
         if ( $w > $width )
         {
-            $scaled = imagescale( $image, $width, (int)round( $h * $width / $w ), IMG_BICUBIC );
+            $height = max( 1, (int)round( $h * $width / $w ) );
+            $scaled = imagecreatetruecolor( $width, $height );
+            if ( !$scaled || !imagecopyresampled( $scaled, $image, 0, 0, 0, 0, $width, $height, $w, $h ) )
+            {
+                imagedestroy( $image );
+                return false;
+            }
             imagedestroy( $image );
             $image = $scaled;
+        }
+        elseif ( !imageistruecolor( $image ) )
+        {
+            imagepalettetotruecolor( $image );
         }
         ob_start();
         imagejpeg( $image, null, 85 );

@@ -275,7 +275,8 @@ class cjwTmvFeed
                 AND t.parent_node_id = ' . (int)$this->container->attribute( 'node_id' ) . '
                 AND t.is_invisible = 0
                 AND a.contentclassattribute_id IN (' . implode( ',', array_map( 'intval', array_keys( $fields ) ) ) . ')' );
-        $locale = eZINI::instance( 'site.ini' )->variable( 'RegionalSettings', 'ContentObjectLocale' );
+        // the languages in the siteaccess' order (as the nodes are shown), then German, the TMV source language
+        $order = array_merge( (array)eZContentLanguage::prioritizedLanguageCodes(), array( 'ger-DE' ) );
         $byLanguage = array();
         foreach ( is_array( $rows ) ? $rows : array() as $row )
             $byLanguage[(int)$row['node_id']][$row['language_code']][$fields[(int)$row['contentclassattribute_id']]] = (string)$row['data_text'];
@@ -283,7 +284,12 @@ class cjwTmvFeed
         {
             if ( !isset( $dates[$nodeId] ) )
                 continue;
-            $values = isset( $languages[$locale] ) ? $languages[$locale] : ( isset( $languages['ger-DE'] ) ? $languages['ger-DE'] : reset( $languages ) );
+            $values = false;
+            foreach ( $order as $code )
+                if ( $values === false && isset( $languages[$code] ) )
+                    $values = $languages[$code];
+            if ( $values === false )
+                $values = reset( $languages );
             $this->events[$nodeId] = array(
                 'title' => isset( $values['title'] ) ? $values['title'] : '',
                 'sub_title' => isset( $values['sub_title'] ) ? $values['sub_title'] : '',
@@ -344,7 +350,9 @@ class cjwTmvFeed
         $nodes = array();
         if ( $page )
         {
-            foreach ( (array)eZContentObjectTreeNode::fetch( array_column( $page, 'node_id' ) ) as $node )
+            // fetch() answers a single node, not a list, when it is given one id
+            $fetched = eZContentObjectTreeNode::fetch( array_column( $page, 'node_id' ) );
+            foreach ( $fetched instanceof eZContentObjectTreeNode ? array( $fetched ) : ( is_array( $fetched ) ? $fetched : array() ) as $node )
                 if ( $node instanceof eZContentObjectTreeNode )
                     $nodes[(int)$node->attribute( 'node_id' )] = $node;
         }

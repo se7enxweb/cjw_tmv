@@ -7,7 +7,7 @@
  *
  * Run it as the web server's user (files of the event images) with the German siteaccess (the TMV source
  * language). Environment: CJW_TMV_LIMIT=<n> caps the events created or updated per container in this run (the
- * container's limit_import_per_cronjob otherwise), CJW_TMV_DRY_RUN=1 asks the TMV and writes nothing.
+ * container's limit_import_per_cronjob otherwise), CJW_TMV_DRY_RUN=1 asks the TMV and writes nothing, CJW_TMV_UPDATE_ALL=1 updates every existing event (within the limit).
  * Prints counts only, never the account or anyone's contact data.
  *
  * @copyright Copyright (C) 2007 - 2026 CJW Network, JAC Systeme GmbH and 7x. All rights reserved.
@@ -47,7 +47,7 @@ foreach ( cjwTmvFeed::fetchContainers() as $node )
     $started = microtime( true );
     $importer = new cjwTmvImporter( $node, $client, $dryRun );
     $importer->importCategories();
-    $importer->run( $limit );
+    $importer->run( $limit, getenv( 'CJW_TMV_UPDATE_ALL' ) === '1' );
     foreach ( $importer->log as $line )
         $cli->output( 'cjw_tmv: container ' . $node->attribute( 'node_id' ) . ': ' . $line );
     $cli->output( sprintf( 'cjw_tmv: container %d done in %.1fs%s', $node->attribute( 'node_id' ), microtime( true ) - $started, $dryRun ? ' (dry run)' : '' ) );
