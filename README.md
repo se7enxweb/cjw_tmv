@@ -4,7 +4,7 @@ The events of the TMV event database (Tourismusverband Mecklenburg-Vorpommern, i
 for Exponential 6, imported as content objects. A port of the legacy extension `cjw_tmv_veranstdb` (the import)
 and of the Nexus v2 `TmvBundle` (classes, views, the Layouts block `tmv_events`).
 
-Status: 0.1.0, the first release.
+Status: 0.1.1.
 
 ## What it does
 

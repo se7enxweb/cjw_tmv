@@ -10,7 +10,7 @@ class cjw_tmvInfo
     {
         return array(
             'Name'      => 'CJW TMV event feed',
-            'Version'   => "0.1.0",
+            'Version'   => "0.1.1",
             'Author'    => '7x',
             'Copyright' => "2007 - 2026 CJW Network, JAC Systeme GmbH and 7x",
             'License'   => "GNU General Public License v2.0 (or any later version)",
