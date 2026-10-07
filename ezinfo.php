@@ -9,7 +9,7 @@ class cjw_tmvInfo
     public static function info()
     {
         return array(
-            'Name'      => '<a href="https://github.com/se7enxweb/cjw_tmv">CJW TMV event feed</a>',
+            'Name'      => 'CJW TMV event feed',
             'Version'   => "0.1.0",
             'Author'    => '7x',
             'Copyright' => "2007 - 2026 CJW Network, JAC Systeme GmbH and 7x",
