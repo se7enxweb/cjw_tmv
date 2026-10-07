@@ -35,5 +35,8 @@
    CJW_TMV_LIMIT=20 php runcronjobs.php -s <German siteaccess> cjw_tmv
    ```
 
-   Then hourly from cron, e.g. `15 * * * * cd <root> && php runcronjobs.php -q -s <German siteaccess> cjw_tmv`.
    `CJW_TMV_DRY_RUN=1` asks the TMV and writes nothing.
+
+7. The extension installs no cron entry: run the cronjob part `cjw_tmv` by hand as above whenever the events should
+   be refreshed, or add a cron entry yourself, e.g. hourly:
+   `15 * * * * cd <root> && php runcronjobs.php -q -s <German siteaccess> cjw_tmv`.

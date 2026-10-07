@@ -4,7 +4,7 @@ The events of the TMV event database (Tourismusverband Mecklenburg-Vorpommern, i
 for Exponential 6, imported as content objects. A port of the legacy extension `cjw_tmv_veranstdb` (the import)
 and of the Nexus v2 `TmvBundle` (classes, views, the Layouts block `tmv_events`).
 
-Status: 0.1.0, first port. Not yet released.
+Status: 0.1.0, the first release.
 
 ## What it does
 
@@ -41,6 +41,12 @@ translations/ger-DE/
 ```
 
 The classes come with the `cjw_multisite_democontent` package (Nexus v2 TmvBundle package `tmv_classes-1.0-1`).
+
+## Requirements
+
+- Exponential 6, PHP 8.0 or later with `curl` and `json`.
+- `cjw_themes_jumper` (the design `starter`) and `explayouts` for the views and the Layouts block.
+- A TMV account, kept only in `settings/override/cjw_tmv.ini.append.php`.
 
 See [INSTALL.md](INSTALL.md).
 
