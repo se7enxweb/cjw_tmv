@@ -27,7 +27,7 @@ if ( !$client->isConfigured() )
 
 $lockDir = eZSys::cacheDirectory() . '/cjw_tmv';
 if ( !is_dir( $lockDir ) )
-    @mkdir( $lockDir, 0775, true );
+    cjwTmvImporter::makeDirectory( $lockDir, 0775 );
 $lock = @fopen( $lockDir . '/import.lock', 'c' );
 if ( !$lock || !flock( $lock, LOCK_EX | LOCK_NB ) )
 {

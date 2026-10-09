@@ -441,7 +441,7 @@ class cjwTmvImporter
             if ( $bytes === false )
                 continue;
             if ( !is_dir( $tmpDir ) )
-                @mkdir( $tmpDir, 0775, true );
+                self::makeDirectory( $tmpDir, 0775 );
             $file = $tmpDir . '/' . (int)$event['id'] . '-' . (int)$medium['id'] . '.jpg';
             file_put_contents( $file, $bytes );
             $title = isset( $medium['pooledMedium']['title']['de'] ) && is_string( $medium['pooledMedium']['title']['de'] ) && trim( $medium['pooledMedium']['title']['de'] ) !== ''
@@ -737,6 +737,32 @@ class cjwTmvImporter
             $document = $parser->process( htmlspecialchars( strip_tags( $html ), ENT_NOQUOTES ) );
         }
         return $document ? eZXMLTextType::domString( $document ) : '';
+    }
+
+    /**
+     * Creates the directory $dir with its parents, mode $mode within the limit for new directories the kernel sets
+     * (EZP_DIR_MODE_MAX in config.php, see eZDir::dirMode()) and under the umask of the process, as a plain
+     * mkdir() does. Used by the import and by the cronjob for its lock.
+     *
+     * @param string $dir
+     * @param int $mode
+     * @return bool
+     */
+    public static function makeDirectory( $dir, $mode )
+    {
+        return @mkdir( $dir, self::dirMode( $mode ), true );
+    }
+
+    /**
+     * The mode $mode within EZP_DIR_MODE_MAX: never wider, and without a limit exactly $mode. On a kernel without
+     * that helper (Exponential before 6.0.15) $mode as it is.
+     *
+     * @param int $mode
+     * @return int
+     */
+    protected static function dirMode( $mode )
+    {
+        return method_exists( 'eZDir', 'dirMode' ) ? eZDir::dirMode( $mode ) : $mode;
     }
 
     /**
