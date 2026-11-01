@@ -452,7 +452,7 @@ class cjwTmvImporter
                 'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_image',
                 'parent_node_id' => $eventNode->attribute( 'node_id' ), 'remote_id' => $remoteId, 'language' => 'ger-DE',
                 'attributes' => array( 'title' => $title, 'image' => $file . '|' . $title,
-                                       'caption' => self::xml( $copyright !== '' ? '&copy; ' . htmlspecialchars( $copyright ) : '' ) ) ) );
+                                       'caption' => self::xml( $copyright !== '' ? '&copy; ' . htmlspecialchars( $copyright, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) : '' ) ) ) );
             @unlink( $file );
             if ( $object instanceof eZContentObject )
             {
