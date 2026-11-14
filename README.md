@@ -48,7 +48,7 @@ The classes come with the `cjw_multisite_democontent` package (Nexus v2 TmvBundl
 - `cjw_themes_jumper` (the design `starter`) and `explayouts` for the views and the Layouts block.
 - A TMV account, kept only in `settings/override/cjw_tmv.ini.append.php`.
 
-See [INSTALL.md](INSTALL.md).
+See [INSTALL.md](INSTALL.md); the changes per release are in [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
