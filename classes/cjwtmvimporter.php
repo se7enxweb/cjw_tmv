@@ -322,14 +322,17 @@ class cjwTmvImporter
         if ( $this->dryRun )
             return $node ? 'updated' : 'created';
 
+        $escape = function ( $line ) {
+            return htmlspecialchars( $line, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 );
+        };
         $de = array(
             'title' => $event['title']['de'],
             'sub_title' => isset( $event['sub_title']['de'] ) ? $event['sub_title']['de'] : '',
             'id' => (string)$event['id'],
             'full_intro' => self::xml( isset( $event['short']['de'] ) ? $event['short']['de'] : '' ),
             'body' => self::xml( isset( $event['body']['de'] ) ? $event['body']['de'] : '' ),
-            'contact' => self::xml( implode( '<br />', array_map( 'htmlspecialchars', $event['contact'] ) ) ),
-            'location' => self::xml( implode( '<br />', array_map( 'htmlspecialchars', $event['location'] ) ) ),
+            'contact' => self::xml( implode( '<br />', array_map( $escape, $event['contact'] ) ) ),
+            'location' => self::xml( implode( '<br />', array_map( $escape, $event['location'] ) ) ),
             'place' => $event['place'],
             'latitude' => $event['latitude'],
             'longitude' => $event['longitude'],
@@ -452,7 +455,7 @@ class cjwTmvImporter
                 'creator_id' => $this->creatorID, 'section_id' => $this->sectionID, 'class_identifier' => 'tmv_image',
                 'parent_node_id' => $eventNode->attribute( 'node_id' ), 'remote_id' => $remoteId, 'language' => 'ger-DE',
                 'attributes' => array( 'title' => $title, 'image' => $file . '|' . $title,
-                                       'caption' => self::xml( $copyright !== '' ? '&copy; ' . htmlspecialchars( $copyright ) : '' ) ) ) );
+                                       'caption' => self::xml( $copyright !== '' ? '&copy; ' . htmlspecialchars( $copyright, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401 ) : '' ) ) ) );
             @unlink( $file );
             if ( $object instanceof eZContentObject )
             {
